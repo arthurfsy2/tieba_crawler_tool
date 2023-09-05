@@ -6,6 +6,8 @@
 # https://docs.python.org/3/tutorial/classes.html
 # https://stackoverflow.com/questions/2792650/import-error-no-module-name-urllib2
 import urllib
+import requests
+import argparse
 from urllib.request import urlopen
 import re
 
@@ -13,28 +15,30 @@ import re
 # deal with html tags
 class Tool:
     # remove <img>
-    removeImg = re.compile('<img.*?>| {7}|')
+    #removeImg = re.compile('<img.*?>| {7}|')
+    replaceImg = re.compile('<img.*?src="(.*?)".*?>')
     # remove hyperlink tag
-    removeAddr = re.compile('<a.*?>|</a>')
+    #removeAddr = re.compile('<a.*?>|</a>')
     # replace new line with \n
-    replaceLine = re.compile('<tr>|<div>|</div>|</p>')
+    #replaceLine = re.compile('<tr>|<div>|</div>|</p>')
     # replace table with \t
-    replaceTD = re.compile('<td>')
+    #replaceTD = re.compile('<td>')
     # replace paragraph heading with \n
-    replacePara = re.compile('<p.*?>')
+    #replacePara = re.compile('<p.*?>')
     # replace new line with \n
     replaceBR = re.compile('<br><br>|<br>')
     # remove tags
-    removeExtraTag = re.compile('<.*?>')
+    #removeExtraTag = re.compile('<.*?>')
 
     def replace(self, x):
-        x = re.sub(self.removeImg, "", x)
-        x = re.sub(self.removeAddr, "", x)
-        x = re.sub(self.replaceLine, "\n", x)
-        x = re.sub(self.replaceTD, "\t", x)
-        x = re.sub(self.replacePara, "\n    ", x)
+        #x = re.sub(self.removeImg, "", x)
+        #x = re.sub(self.removeAddr, "", x)
+        #x = re.sub(self.replaceLine, "\n", x)
+       # x = re.sub(self.replaceTD, "\t", x)
+        #x = re.sub(self.replacePara, "\n    ", x)
+        x = re.sub(self.replaceImg, r'![](\1)', x)
         x = re.sub(self.replaceBR, "\n", x)
-        x = re.sub(self.removeExtraTag, "", x)
+       # x = re.sub(self.removeExtraTag, "", x)
         # strip() remove other contents
         return x.strip()
 
@@ -56,31 +60,36 @@ class Baidu_Tieba:
         self.defaultTitle = u"百度贴吧"
         self.floor_tag = floor_tag
 
+
     # pass in the page number and fetch the page content
     def get_page(self, page_number):
         try:
             url = self.thread_url + self.only_lz + '&pn=' + str(page_number)
-            request = urllib.request.Request(url)
-            response = urllib.request.urlopen(request)
-            return response.read().decode('utf-8')
-
-        except urllib.URLError as e:
+            response = requests.get(url)
+            return response.text
+        
+        except requests.exceptions.RequestException as e:
+            
             if hasattr(e, "reason"):
                 print("failed to build connection with tieba: ", e.reason)
-                return None
+            return None
 
     # get thread title
     def get_title(self):
         page = self.get_page(1)
-        pattern = re.compile('<h3 class="core_title_txt.*?>(.*?)</h3>', re.S)
+        pattern = re.compile('<h1 class="core_title_txt.*?>(.*?)</h1>', re.S)
         result = re.search(pattern, page)
         if result:
-            # print(result.group(1))
-            return result.group(1).strip() # .group(1) to get the target pattern 
+            return result.group(1).strip()
         else:
-            print("Doesn't get the thread title")
-            return None
-
+            pattern = re.compile('<h3 class="core_title_txt.*?>(.*?)</h3>', re.S)
+            result = re.search(pattern, page)
+            if result:
+                return result.group(1).strip()
+            else:
+                print("Doesn't get the thread title")
+                return None
+        
     # get total page number
     def get_total_page_num(self):
         page = self.get_page(1)
@@ -101,19 +110,27 @@ class Baidu_Tieba:
             contents.append(content.encode('utf-8'))
         return contents
 
-    def set_file_title(self, title):
-        if title is not None:
-            self.file = open(title + ".txt", "w+")
-        else:
-            self.file = open(self.defaultTitle + ".txt", "w+")
 
+
+    def set_file_title(self, title):
+        download_path ="./Download/"
+        if title is not None:
+            print(title)
+            # 将不符合文件名命名规则的符号替换为空格
+            title = re.sub(r'[<>:"/\\|?*]', ' ', title)
+            self.file = open(download_path+title + ".md", "w+",encoding="utf-8")
+            self.file.write("["+title+"](" + base_url + ")\n\n")
+        else:
+            self.file = open(self.defaultTitle + ".md", "w+",encoding="utf-8")
+    
     def write_data(self, contents):
         # write content each floor to file
         for item in contents:
             if self.floor_tag == '1':
                 # Will add floor tag
                 # split mark between each floor
-                floor_line = "\n" + str(self.floor) + u"-----------------------------------------------------------------------------------------\n"
+                
+                floor_line = "\n>" + str(self.floor) + u"楼-----------------------------------------------------------------------------------------\n"
                 self.file.write(floor_line)
             self.file.write(item.decode("utf-8")) # convert byte to string
             self.floor += 1
@@ -139,12 +156,24 @@ class Baidu_Tieba:
             print("done")
 
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("base_url", help="输入帖子地址")
+    
+    options = parser.parse_args()
+    
+base_url = options.base_url
+
 # create instance for class Baidu_Tieba
 # return the html content of specified page
 print("*** 百度贴吧帖子读取工具 ***")
-base_url = input('输入帖子地址: \n')
-only_lz = input('只看楼主发言，是 - 1， 否 - 0：\n')
-floor_tag = input('只用楼层分割符号, 是 - 1， 否 - 0: \n')
+#base_url = input('输入帖子地址: \n')
+#only_lz = input('只看楼主发言，是 - 1， 否 - 0：\n')
+only_lz = '0'
+#floor_tag = input('只用楼层分割符号, 是 - 1， 否 - 0: \n')
+floor_tag = '1'
 tieba = Baidu_Tieba(base_url, only_lz, floor_tag) # url, only_lz, floor tag
 tieba.start()
+
 

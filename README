@@ -1,8 +1,0 @@
-Tool to fetch contents of Baidu Tieba and export to a .txt file.
-
-Use python3 to launch .py file.
-
-Enter url address:
-eg. https://tieba.baidu.com/p/1234567
-
-Follow the instruction and waiting for the print.
