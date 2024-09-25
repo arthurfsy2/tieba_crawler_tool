@@ -1,0 +1,12 @@
+{
+    "directory": "./Download",
+    "author":"author",
+    "save_dir": "./PicDownload",
+    "base_url_path": "./scripts/base_url.txt",
+    "pic_base_url": "",
+    "merge_output_file" : "./output/merge.md",
+    "list_output_file": "./output/list.md",
+    "merge_template_path": "./template/tieba_merge_template.md",
+    "list_template_path" : "./template/tieba_list_template.md",
+    "Cookie":""
+}

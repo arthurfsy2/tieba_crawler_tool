@@ -1,6 +1,7 @@
 import os
 from jinja2 import Template
 import re
+import json
 from datetime import datetime
 
 def extract_info_from_filename(filename):
@@ -47,6 +48,7 @@ def merge_md_list(info_total, list_output_file):
         content_list += f'|{i}| {info["date"]} | [ {info["tieba_name"]} ](https://tieba.baidu.com/f?kw={urllib.parse.quote(info["tieba_name"])} "{info["tieba_name"]}吧") | [ {info["title"]} ](https://tieba.baidu.com/p/{info["tiezi_id"]}) | {info["reply_num"]} |\n'
         
     output = list_template.render(
+        author = author,
         oldest_date=info_total[-1]["date"].split(" ")[0],
         content_list=content_list,
     )
@@ -89,6 +91,7 @@ def merge_md_files(directory, merge_output_file, list_output_file):
 
     # 渲染输出
     output = merge_template.render(
+        author = author,
         oldest_date = md_files_with_dates[-1][0].split(" ")[0],
         content_merge=content_merge,
     )
@@ -99,14 +102,19 @@ def merge_md_files(directory, merge_output_file, list_output_file):
 
 
 if __name__ == "__main__":
-    # 示例用法
-    directory = "./Download"  # 替换为实际的目录路径
-    merge_output_file = "./Download2/merge.md"  # 替换为实际的输出文件路径
-    list_output_file = "./Download2/list.md"
-    # merge_output_file = r"D:\web\blog\src\Arthur\Tieba\我的贴子\merge.md"  # 替换为实际的输出文件路径
-    # list_output_file = r"D:\web\blog\src\Arthur\Tieba\我的贴子\list.md"
-    merge_template_path = "tieba_merge_template.md"
-    list_template_path = "tieba_list_template.md"
+    with open("scripts/config.json", "r", encoding="utf-8") as file:
+        data = json.load(file)
+
+    author = data["author"]
+    directory = data["directory"]
+    save_dir = data["save_dir"]
+    pic_base_url = data["pic_base_url"]
+    merge_output_file = data["merge_output_file"]
+    list_output_file = data["list_output_file"]
+    merge_template_path = data["merge_template_path"]
+    list_template_path = data["list_template_path"]
+    Cookie = data["Cookie"]
+
     with open(merge_template_path, 'r', encoding='utf-8') as f:
         merge_template = Template(f.read())
 

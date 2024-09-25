@@ -14,6 +14,7 @@ import os
 from urllib.parse import urljoin
 import sys
 import time
+import json
 
 def download_and_replace_pic_url(content):
     global save_dir, pic_base_url
@@ -105,8 +106,9 @@ class Baidu_Tieba:
                 'https': 'http://127.0.0.1:7890',
             }
             headers = {
-                "cookie":''
+                "cookie":Cookie
             }
+
             url = self.thread_url + self.only_lz + '&pn=' + str(page_number)
             response = requests.get(url, headers=headers, proxies=proxies)
             return response.text
@@ -221,12 +223,18 @@ class Baidu_Tieba:
 
 
 if __name__ == "__main__":
-    save_dir = "./PicDownload"
-    # save_dir = r'\\Family_4A1801\FamilyDoc\个人建站\public\Tieba'
-    pic_base_url = "" # 需要修改为你的图床根目录，以下为举例，末尾需要带"/"
-    # pic_base_url = "https://pan.xxxxx:xxx/d/public/"
-    # create instance for class Baidu_Tieba
-    # return the html content of specified page
+    with open("scripts/config.json", "r",encoding="utf-8") as file:
+        data = json.load(file)
+
+    save_dir = data["save_dir"]
+    pic_base_url = data["pic_base_url"]
+    merge_output_file = data["merge_output_file"]
+    list_output_file = data["list_output_file"]
+    merge_template_path = data["merge_template_path"]
+    list_template_path = data["list_template_path"]
+    Cookie = data["Cookie"]
+    base_url_path = data["base_url_path"]
+
     print("*** 百度贴吧帖子读取工具 ***")
     #base_url = input('输入帖子地址: \n')
     #only_lz = input('只看楼主发言，是 - 1， 否 - 0：\n')
@@ -235,7 +243,6 @@ if __name__ == "__main__":
     floor_tag = '1'
     base_urls = []
 
-    base_url_path = "./base_url.txt"
     with open(base_url_path, "r") as file:
         for line in file:
             url = line.strip()  # 去除行首行尾的空白字符
@@ -257,7 +264,7 @@ if __name__ == "__main__":
             print(base_url)
             tieba = Baidu_Tieba(base_url, only_lz, floor_tag, i) # url, only_lz, floor tag
             tieba.start()
-            time.sleep(10)  # 在每次循环后等待N秒，防止封IP
+            time.sleep(1)  # 在每次循环后等待N秒，防止封IP
 
 
 

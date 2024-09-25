@@ -3,7 +3,7 @@ title: 贴子汇总
 icon: "pencil"
 date: {{oldest_date}}
 category:
-  - Arthur
+  - {{author}}
 tag:
   - 贴吧
   - 备份

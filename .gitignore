@@ -1,5 +1,6 @@
 Download/*.md
 PicDownload/*
-Download2/*.md
+output/*.md
 BAK
-base_url_list.txt
+scripts/base_url_list.txt
+scripts/config.json
